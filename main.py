@@ -14,6 +14,7 @@ flags.DEFINE_float("learning_rate", 1e-4 , "The learning rate")
 flags.DEFINE_integer("batch_size", 64, "the size of batch")
 flags.DEFINE_string("result_dir", "result", "Name of result directory")
 flags.DEFINE_string("test_img", "", "test_img")
+flags.DEFINE_float("clip_grad", 0.1 , "The clip gradient number")
 
 
 

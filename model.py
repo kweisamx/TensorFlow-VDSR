@@ -59,9 +59,18 @@ class VDSR(object):
         data_dir = checkpoint_dir(config)
         
         input_, label_ = read_data(data_dir)
+
         # Stochastic gradient descent with the standard backpropagation
         #self.train_op = tf.train.GradientDescentOptimizer(config.learning_rate).minimize(self.loss)
-        self.train_op = tf.train.AdamOptimizer(learning_rate=config.learning_rate).minimize(self.loss)
+        opt = tf.train.AdamOptimizer(learning_rate=config.learning_rate)
+
+        grad_and_value = opt.compute_gradients(self.loss)
+
+        capped_gvs = [(tf.clip_by_value(grad, -config.clip_grad, config.clip_grad), var) for grad, var in grad_and_value]
+
+        self.train_op = opt.apply_gradients(capped_gvs)
+
+
         tf.initialize_all_variables().run()
 
         counter = 0
