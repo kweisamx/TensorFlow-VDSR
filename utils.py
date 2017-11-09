@@ -111,19 +111,21 @@ def make_sub_data(data, config):
             for y in range(0, w - config.image_size + 1, config.stride):
                 ny += 1
 
-                sub_input = input_[x: x + config.image_size, y: y + config.image_size] # 33 * 33
-                sub_label = label_[x: x + config.label_size, y: y + config.label_size] # 33 * 33
+                sub_input = input_[x: x + config.image_size, y: y + config.image_size] # 41 * 41
+                sub_label = label_[x: x + config.label_size, y: y + config.label_size] # 41 * 41
 
 
                 # Reshape the subinput and sublabel
                 sub_input = sub_input.reshape([config.image_size, config.image_size, config.c_dim])
                 sub_label = sub_label.reshape([config.label_size, config.label_size, config.c_dim])
+
                 # Normialize
                 sub_input =  sub_input / 255.0
                 sub_label =  sub_label / 255.0
                 
                 #cv2.imshow("im1",sub_input)
                 #cv2.imshow("im2",sub_label)
+                #cv2.imshow("residual",sub_input - sub_label)
                 #cv2.waitKey(0)
 
                 # Add to sequence
@@ -164,6 +166,7 @@ def make_data_hf(input_, label_, config):
         savepath = os.path.join(os.getcwd(), config.checkpoint_dir + '/test.h5')
 
     with h5py.File(savepath, 'w') as hf:
+        #checkimage(input_[1])
         hf.create_dataset('input', data=input_)
         hf.create_dataset('label', data=label_)
 
@@ -196,8 +199,8 @@ def input_setup(config):
 
 
     # Make list to numpy array. With this transform
-    arrinput = np.asarray(sub_input_sequence) # [?, 33, 33, 1]
-    arrlabel = np.asarray(sub_label_sequence) # [?, 33, 33, 1]
+    arrinput = np.asarray(sub_input_sequence) # [?, 41, 41, 3]
+    arrlabel = np.asarray(sub_label_sequence) # [?, 41, 41, 3]
     #print( arrinput.shape,arrlabel.shape,nx,ny)
     make_data_hf(arrinput, arrlabel, config)
 
