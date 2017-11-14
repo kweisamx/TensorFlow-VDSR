@@ -32,8 +32,8 @@ class VDSR(object):
         
         
         self.weights = {
-            'w_start': tf.Variable(tf.random_normal([3, 3, self.c_dim, 64], stddev = np.sqrt(2.0/9)), name='w_start'),
-            'w_end': tf.Variable(tf.random_normal([3, 3, 64, self.c_dim], stddev=np.sqrt(2.0/9)), name='w_end')
+            'w_start': tf.Variable(tf.random_normal([3, 3, self.c_dim, 64], stddev = 1e-3), name='w_start'),
+            'w_end': tf.Variable(tf.random_normal([3, 3, 64, self.c_dim], stddev=1e-3), name='w_end')
         }
 
         self.biases = {
@@ -43,7 +43,7 @@ class VDSR(object):
 
         # Create very deep layer weight and bias
         for  i in range(2, self.layer): #except start and end 
-            self.weights.update({'w_%d' % i: tf.Variable(tf.random_normal([3, 3, 64, 64], stddev=np.sqrt(2.0/9/64)), name='w_%d' % i) })
+            self.weights.update({'w_%d' % i: tf.Variable(tf.random_normal([3, 3, 64, 64], stddev= 1e-3), name='w_%d' % i) })
             self.biases.update({'b_%d' % i: tf.Variable(tf.zeros([64], name='b_%d' % i)) })
             
         self.pred = self.model()
@@ -57,7 +57,6 @@ class VDSR(object):
         conv.append(tf.nn.relu(tf.nn.conv2d(self.images, self.weights['w_start'], strides=[1,1,1,1], padding='SAME') + self.biases['b_start']))
         for i in range(2, self.layer):
             conv.append(tf.nn.relu(tf.nn.conv2d(conv[i-2], self.weights['w_%d' % i], strides=[1,1,1,1], padding='SAME') + self.biases['b_%d' % i]))
-        print(conv)
         conv_end = tf.nn.conv2d(conv[i-1], self.weights['w_end'], strides=[1,1,1,1], padding='SAME') + self.biases['b_end'] # This layer don't need ReLU
         return conv_end
 
@@ -74,18 +73,15 @@ class VDSR(object):
 
         # NOTE: learning rate decay
         global_step = tf.Variable(0, trainable=False)
-        learning_rate = tf.train.exponential_decay(1e-4, global_step * config.batch_size, len(input_)*100, 0.1, staircase=True)
-
-        # NOTE: Clip gradient       
-        '''
+        learning_rate = tf.train.exponential_decay(config.learning_rate, global_step * config.batch_size, len(input_)*100, 0.1, staircase=True)
+        # NOTE: Clip gradient
         opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
         grad_and_value = opt.compute_gradients(self.loss)
-
-        capped_gvs = [(tf.clip_by_value(grad, -config.clip_grad/learning_rate, config.clip_grad/learning_rate), var) for grad, var in grad_and_value]
+        print(config.clip_grad/learning_rate)
+        capped_gvs = [(tf.clip_by_value(grad, -(config.clip_grad), config.clip_grad), var) for grad, var in grad_and_value]
 
         self.train_op = opt.apply_gradients(capped_gvs, global_step=global_step)
-        '''
-        self.train_op = tf.train.AdamOptimizer(learning_rate=config.learning_rate).minimize(self.loss,global_step = global_step)
+        #self.train_op = tf.train.AdamOptimizer(learning_rate=config.learning_rate).minimize(self.loss)
 
         tf.initialize_all_variables().run()
 
@@ -103,11 +99,11 @@ class VDSR(object):
                     batch_images = input_[idx * config.batch_size : (idx + 1) * config.batch_size]
                     batch_labels = label_[idx * config.batch_size : (idx + 1) * config.batch_size]
                     counter += 1
-                    _, err, lr= self.sess.run([self.train_op, self.loss, learning_rate], feed_dict={self.images: batch_images, self.labels: batch_labels})
+                    _, err= self.sess.run([self.train_op, self.loss], feed_dict={self.images: batch_images, self.labels: batch_labels})
 
                     if counter % 10 == 0:
-                        print("Epoch: [%2d], step: [%2d], time: [%4.4f], loss: [%.8f], lr: [%.8f]" % ((ep+1), counter, time.time()-time_, err, lr))
-                        #print(label_[1] - self.pred.eval({self.images: input_})[1] - input_[1],'loss: ',err)
+                        print("Epoch: [%2d], step: [%2d], time: [%4.4f], loss: [%.8f]" % ((ep+1), counter, time.time()-time_, err ))
+                       # print(label_[1] - self.pred.eval({self.images: input_})[1] - input_[1],'loss: ',err)
                     if counter % 500 == 0:
                         self.save(config.checkpoint_dir, counter)
         # Test
@@ -116,6 +112,7 @@ class VDSR(object):
             #print("nx","ny",nx,ny)
             
             result = self.pred.eval({self.images: input_}) + input_
+            print(label_ - result)
             image = merge(result, [nx, ny], self.c_dim)
             checkimage(merge(result, [nx, ny], self.c_dim))
             #image_LR = merge(input_, [nx, ny], self.c_dim)
