@@ -57,6 +57,7 @@ class VDSR(object):
         conv.append(tf.nn.relu(tf.nn.conv2d(self.images, self.weights['w_start'], strides=[1,1,1,1], padding='SAME') + self.biases['b_start']))
         for i in range(2, self.layer):
             conv.append(tf.nn.relu(tf.nn.conv2d(conv[i-2], self.weights['w_%d' % i], strides=[1,1,1,1], padding='SAME') + self.biases['b_%d' % i]))
+        #conv2 = tf.nn.relu(tf.nn.conv2d(conv[0], self.weights['w_2'], strides=[1,1,1,1], padding='SAME') + self.biases['b_2'])        
         conv_end = tf.nn.conv2d(conv[i-1], self.weights['w_end'], strides=[1,1,1,1], padding='SAME') + self.biases['b_end'] # This layer don't need ReLU
         return conv_end
 
@@ -73,15 +74,16 @@ class VDSR(object):
 
         # NOTE: learning rate decay
         global_step = tf.Variable(0, trainable=False)
-        learning_rate = tf.train.exponential_decay(config.learning_rate, global_step * config.batch_size, len(input_)*100, 0.1, staircase=True)
+        #learning_rate = tf.train.exponential_decay(config.learning_rate, global_step * config.batch_size, len(input_)*100, 0.1, staircase=True)
         # NOTE: Clip gradient
-        opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
-        grad_and_value = opt.compute_gradients(self.loss)
-        print(config.clip_grad/learning_rate)
-        capped_gvs = [(tf.clip_by_value(grad, -(config.clip_grad), config.clip_grad), var) for grad, var in grad_and_value]
+        #opt = tf.train.AdamOptimizer(learning_rate=config.learning_rate)
+        #grad_and_value = opt.compute_gradients(self.loss)
+        
+        #clip = tf.Variable(config.clip_grad, name='clip') 
+        #capped_gvs = [(tf.clip_by_value(grad, -(clip), clip), var) for grad, var in grad_and_value]
 
-        self.train_op = opt.apply_gradients(capped_gvs, global_step=global_step)
-        #self.train_op = tf.train.AdamOptimizer(learning_rate=config.learning_rate).minimize(self.loss)
+        #self.train_op = opt.apply_gradients(capped_gvs, global_step=global_step)
+        self.train_op = tf.train.AdamOptimizer(learning_rate=config.learning_rate).minimize(self.loss)
 
         tf.initialize_all_variables().run()
 
@@ -99,7 +101,8 @@ class VDSR(object):
                     batch_images = input_[idx * config.batch_size : (idx + 1) * config.batch_size]
                     batch_labels = label_[idx * config.batch_size : (idx + 1) * config.batch_size]
                     counter += 1
-                    _, err= self.sess.run([self.train_op, self.loss], feed_dict={self.images: batch_images, self.labels: batch_labels})
+                    #_, err, lr, c = self.sess.run([self.train_op, self.loss, learning_rate, clip], feed_dict={self.images: batch_images, self.labels: batch_labels})
+                    _, err = self.sess.run([self.train_op, self.loss], feed_dict={self.images: batch_images, self.labels: batch_labels})
 
                     if counter % 10 == 0:
                         print("Epoch: [%2d], step: [%2d], time: [%4.4f], loss: [%.8f]" % ((ep+1), counter, time.time()-time_, err ))
