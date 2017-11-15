@@ -73,7 +73,6 @@ def prepare_data(dataset="Train",Input_img=""):
         else:
             data_dir = os.path.join(os.path.join(os.getcwd(), dataset), "Set5")
             data = glob.glob(os.path.join(data_dir, "*.bmp")) # make set of all dataset file path
-    print(data)
     return data
 
 def load_data(is_train, test_img):
@@ -201,7 +200,6 @@ def input_setup(config):
     # Make list to numpy array. With this transform
     arrinput = np.asarray(sub_input_sequence) # [?, 41, 41, 3]
     arrlabel = np.asarray(sub_label_sequence) # [?, 41, 41, 3]
-    #print( arrinput.shape,arrlabel.shape,nx,ny)
     make_data_hf(arrinput, arrlabel, config)
 
     return nx, ny

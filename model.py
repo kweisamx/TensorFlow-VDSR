@@ -101,24 +101,19 @@ class VDSR(object):
                     batch_images = input_[idx * config.batch_size : (idx + 1) * config.batch_size]
                     batch_labels = label_[idx * config.batch_size : (idx + 1) * config.batch_size]
                     counter += 1
-                    #_, err, lr, c = self.sess.run([self.train_op, self.loss, learning_rate, clip], feed_dict={self.images: batch_images, self.labels: batch_labels})
                     _, err = self.sess.run([self.train_op, self.loss], feed_dict={self.images: batch_images, self.labels: batch_labels})
 
                     if counter % 10 == 0:
                         print("Epoch: [%2d], step: [%2d], time: [%4.4f], loss: [%.8f]" % ((ep+1), counter, time.time()-time_, err ))
-                       # print(label_[1] - self.pred.eval({self.images: input_})[1] - input_[1],'loss: ',err)
                     if counter % 500 == 0:
                         self.save(config.checkpoint_dir, counter)
         # Test
         else:
             print("Now Start Testing...")
-            #print("nx","ny",nx,ny)
             
             result = self.pred.eval({self.images: input_}) + input_
-            print(label_ - result)
             image = merge(result, [nx, ny], self.c_dim)
             checkimage(merge(result, [nx, ny], self.c_dim))
-            #image_LR = merge(input_, [nx, ny], self.c_dim)
             #checkimage(image_LR)
             imsave(image, config.result_dir+'/result.png', config)
 
