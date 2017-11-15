@@ -32,8 +32,8 @@ class VDSR(object):
         
         
         self.weights = {
-            'w_start': tf.Variable(tf.random_normal([3, 3, self.c_dim, 64], stddev = 1e-3), name='w_start'),
-            'w_end': tf.Variable(tf.random_normal([3, 3, 64, self.c_dim], stddev=1e-3), name='w_end')
+            'w_start': tf.Variable(tf.random_normal([3, 3, self.c_dim, 64], stddev =np.sqrt(2.0/9)), name='w_start'),
+            'w_end': tf.Variable(tf.random_normal([3, 3, 64, self.c_dim], stddev=np.sqrt(2.0/9/64)), name='w_end')
         }
 
         self.biases = {
@@ -43,7 +43,7 @@ class VDSR(object):
 
         # Create very deep layer weight and bias
         for  i in range(2, self.layer): #except start and end 
-            self.weights.update({'w_%d' % i: tf.Variable(tf.random_normal([3, 3, 64, 64], stddev= 1e-3), name='w_%d' % i) })
+            self.weights.update({'w_%d' % i: tf.Variable(tf.random_normal([3, 3, 64, 64], stddev= np.sqrt(2.0/9/64)), name='w_%d' % i) })
             self.biases.update({'b_%d' % i: tf.Variable(tf.zeros([64], name='b_%d' % i)) })
             
         self.pred = self.model()
@@ -76,14 +76,14 @@ class VDSR(object):
         global_step = tf.Variable(0, trainable=False)
         #learning_rate = tf.train.exponential_decay(config.learning_rate, global_step * config.batch_size, len(input_)*100, 0.1, staircase=True)
         # NOTE: Clip gradient
-        #opt = tf.train.AdamOptimizer(learning_rate=config.learning_rate)
-        #grad_and_value = opt.compute_gradients(self.loss)
+        opt = tf.train.AdamOptimizer(learning_rate=config.learning_rate)
+        grad_and_value = opt.compute_gradients(self.loss)
         
-        #clip = tf.Variable(config.clip_grad, name='clip') 
-        #capped_gvs = [(tf.clip_by_value(grad, -(clip), clip), var) for grad, var in grad_and_value]
+        clip = tf.Variable(config.clip_grad, name='clip') 
+        capped_gvs = [(tf.clip_by_value(grad, -(clip), clip), var) for grad, var in grad_and_value]
 
-        #self.train_op = opt.apply_gradients(capped_gvs, global_step=global_step)
-        self.train_op = tf.train.AdamOptimizer(learning_rate=config.learning_rate).minimize(self.loss)
+        self.train_op = opt.apply_gradients(capped_gvs, global_step=global_step)
+        #self.train_op = tf.train.AdamOptimizer(learning_rate=config.learning_rate).minimize(self.loss)
 
         tf.initialize_all_variables().run()
 
