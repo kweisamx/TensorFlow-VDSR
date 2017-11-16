@@ -1,6 +1,16 @@
 # Implement VDSR with TensorFlow
 
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kweisamx/VDSR/blob/master/LICENSE)
+
+---
+![](https://i.imgur.com/8jdho2m.png)
+
+# Introduction
+
+We present a highly accurate single-image super-resolution (SR) method, learn residuals only and use extremely high learning rates enabled by adjustable gradient clipping
+
+---
+
 ## Dependency
 pip
 * Tensorflow
@@ -20,7 +30,7 @@ sudo apt-get install libsm6
 sudo apt-get install libxrender1
 ```
 
-
+---
 ## How to train
 ```
 python main.py
@@ -36,7 +46,7 @@ trainning with 10 layer (default is 20)
 python main.py --layer 10
 ```
 
-
+---
 ## How to test
 
 If you don't input a Test image, it will be default image
@@ -62,7 +72,7 @@ python main.py --is_train False --test_img Train/t20.bmp
 ```
 
 then result image also put in the result directory
-
+---
 ## Result 
 
 * Origin
@@ -84,6 +94,7 @@ then result image also put in the result directory
 
     ![Imgur](https://i.imgur.com/gLHjOMP.png)
     
+---
 ## Reference
 [kweisamx/SRCNN](https://github.com/kweisamx/SRCNN)
     
