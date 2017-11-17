@@ -10,9 +10,17 @@
 We present a highly accurate single-image super-resolution (SR) method, learn residuals only and use extremely high learning rates enabled by adjustable gradient clipping
 
 ---
+## Environment
+
+* Ubuntu 16.04
+* Python 2.7.12
+
+---
 
 ## Dependency
+
 pip
+
 * Tensorflow
 * Opencv
 * h5py
