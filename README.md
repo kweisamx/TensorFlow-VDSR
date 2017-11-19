@@ -80,7 +80,9 @@ python main.py --is_train False --test_img Train/t20.bmp
 ```
 
 then result image also put in the result directory
+
 ---
+
 ## Result 
 
 * Origin
